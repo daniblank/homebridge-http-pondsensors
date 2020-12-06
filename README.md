@@ -6,27 +6,34 @@
 </p>
 
 
-# Homebridge Platform Plugin Template
+# homebridge-http-pondsensors
 
-This is a template Homebridge platform plugin and can be used as a base to help you get started developing your own plugin.
+Supports custom https devices on HomeBridge Platform
 
-This template should be use in conjunction with the [developer documentation](https://developers.homebridge.io/). A full list of all supported service types, and their characteristics is available on this site.
+# Installation
 
-## Clone As Template
+1. Install homebridge using: npm install -g homebridge
+2. Install this plugin using: npm install -g homebridge-httptemperaturehumidity
+3. Update your configuration file. See sample-config.json in this repository for a sample. 
 
-Click the link below to create a new GitHub Repository using this template, or click the *Use This Template* button above.
+# Configuration
 
-<span align="center">
+Sample Configuration file:
+ ```
+"accessories": [
+        "accessories": [
+        {
+            "accessory": "Pondsensors",
+            "name": "Goldfish pond",
+            "url": "http://192.168.1.7/",
+            "ultrasound_distance": "50",
+            "http_method": "GET"
+        }
+    ]
 
-### [Create New Repository From Template](https://github.com/homebridge/homebridge-plugin-template/generate)
+```
 
-</span>
 
-## Setup Development Environment
-
-To develop Homebridge plugins you must have Node.js 12 or later installed, and a modern code editor such as [VS Code](https://code.visualstudio.com/). This plugin template uses [TypeScript](https://www.typescriptlang.org/) to make development easier and comes with pre-configured settings for [VS Code](https://code.visualstudio.com/) and ESLint. If you are using VS Code install these extensions:
-
-* [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint)
 
 ## Install Development Dependencies
 
@@ -48,11 +55,6 @@ Open the [`package.json`](./package.json) and change the following attributes:
 When you are ready to publish the plugin you should set `private` to false, or remove the attribute entirely.
 
 ## Update Plugin Defaults
-
-Open the [`src/settings.ts`](./src/settings.ts) file and change the default values:
-
-* `PLATFORM_NAME` - Set this to be the name of your platform. This is the name of the platform that users will use to register the plugin in the Homebridge `config.json`.
-* `PLUGIN_NAME` - Set this to be the same name you set in the [`package.json`](./package.json) file. 
 
 Open the [`config.schema.json`](./config.schema.json) file and change the following attribute:
 
