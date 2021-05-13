@@ -16,8 +16,13 @@ export = (api: API) => {
 };
 
 interface PondsensorAccessoryConfig extends AccessoryConfig {
-	'url'?: string;
-	'ultrasound_distance'?: number;
+  'url'?: string;
+  'ultrasound_distance'?: number;
+  'airtemp_corr'?: number;
+  'airtempname'?: string;
+  'airhumname'?: string;
+  'waterlevelname'?: string;
+  'watertemperaturename'?: string;
 }
 
 class Pondsensors implements AccessoryPlugin {
@@ -27,29 +32,28 @@ class Pondsensors implements AccessoryPlugin {
   private readonly url: string;
   private airtemperature: number;
   private airhumidity: number;
-  private soilhumidity: number;
   private waterlevel: number;
   private watertemperature: number;
   private readonly ultrasound_distance: number;
+  private readonly airtemp_corr: number;
 
   private readonly informationService: Service;
   private readonly airtemperatureService: Service;
   private readonly airhumidityService: Service;
-  private readonly soilhumidityService: Service;
   private readonly waterlevelService: Service;
   private readonly watertemperatureService: Service;
 
-  constructor(log: Logging, config: AccessoryConfig, api: API) {
+  constructor(log: Logging, config: AccessoryConfig) {
     const pondConfig = config as PondsensorAccessoryConfig;
     this.log = log;
     this.name = config['name'];
 
     this.url = pondConfig['url'] || 'localhost';
     this.ultrasound_distance = pondConfig['ultrasound_distance'] || 0;
+    this.airtemp_corr = pondConfig['airtemp_corr'] || 0;
 
     this.airtemperature = 0;
     this.airhumidity = 0;
-    this.soilhumidity = 0;
     this.waterlevel = 0;
     this.watertemperature = 0;
 
@@ -59,23 +63,32 @@ class Pondsensors implements AccessoryPlugin {
       .setCharacteristic(hap.Characteristic.Manufacturer, 'Daniel Blank')
       .setCharacteristic(hap.Characteristic.Model, 'Pondsensor');
 
-    this.airtemperatureService = new hap.Service.TemperatureSensor(this.name);
+    this.airtemperatureService = new hap.Service.TemperatureSensor(pondConfig.airtempname, 'Airtemperature');
     this.airtemperatureService.getCharacteristic(hap.Characteristic.CurrentTemperature)
       .on('get', this.handleCurrentAirTemperatureGet.bind(this));
 
-    this.airhumidityService = new hap.Service.HumiditySensor(this.name);
+    this.airhumidityService = new hap.Service.HumiditySensor(pondConfig.airhumname, 'Airhumidity');
     this.airhumidityService.getCharacteristic(hap.Characteristic.CurrentRelativeHumidity)
       .on('get', this.handleCurrentAirHumidityGet.bind(this));
 
-    this.soilhumidityService = new hap.Service.HumiditySensor(this.name);
-    this.soilhumidityService.getCharacteristic(hap.Characteristic.CurrentRelativeHumidity)
-      .on('get', this.handleCurrentSoilHumidityGet.bind(this));
-
-    this.waterlevelService = new hap.Service.HumidifierDehumidifier(this.name);
-    this.waterlevelService.getCharacteristic(hap.Characteristic.WaterLevel)
+    this.waterlevelService = new hap.Service.HumiditySensor(pondConfig.waterlevelname, 'Waterlevel');
+    this.waterlevelService.getCharacteristic(hap.Characteristic.CurrentRelativeHumidity)
       .on('get', this.handleCurrentWaterLevelGet.bind(this));
+  
+    // this.waterlevelService = new hap.Service.HumidifierDehumidifier(pondConfig.waterlevelname, 'Waterlevel');
+    // this.waterlevelService.getCharacteristic(hap.Characteristic.WaterLevel)
+    //   .on('get', this.handleCurrentWaterLevelGet.bind(this));
+    // this.waterlevelService.getCharacteristic(hap.Characteristic.Active)
+    //   .on('get', this.handleCurrentActiveGet.bind(this));s
+    // this.waterlevelService.getCharacteristic(hap.Characteristic.CurrentHumidifierDehumidifierState)
+    //   .on('get', this.handleCurrentHumidifierDehumidifierStateGet.bind(this));
+    // this.waterlevelService.getCharacteristic(hap.Characteristic.TargetHumidifierDehumidifierState)
+    //   .on('get', this.handleCurrentTargetHumidifierDehumidifierStateGet.bind(this));
+    // this.waterlevelService.getCharacteristic(hap.Characteristic.CurrentRelativeHumidity)
+    //   .on('get', this.handleCurrentRelativeHumidityGet.bind(this));
 
-    this.watertemperatureService = new hap.Service.TemperatureSensor(this.name);
+
+    this.watertemperatureService = new hap.Service.TemperatureSensor(pondConfig.watertemperaturename, 'Watertemperature');
     this.watertemperatureService.getCharacteristic(hap.Characteristic.CurrentTemperature)
       .on('get', this.handleCurrentWaterTemperatureGet.bind(this));
 
@@ -84,12 +97,12 @@ class Pondsensors implements AccessoryPlugin {
   getData() {
     (async () => {
       try {
-        const response = await fetch('http://192.168.1.7/');
+        const response = await fetch(this.url);
         const data = await response.json();
-        this.airtemperature = parseFloat(data.airtemperature);
+        this.airtemperature = parseFloat(data.airtemperature) - this.airtemp_corr;
         this.airhumidity = parseFloat(data.airhumidity);
-        this.soilhumidity = parseFloat(data.soilhumidity);
         this.waterlevel = this.ultrasound_distance - parseFloat(data.waterlevel);
+        this.waterlevel = this.waterlevel > 100 ? 100 : this.waterlevel < 0 ? 0 : this.waterlevel;
         this.watertemperature = parseFloat(data.watertemperature);
       } catch (error) {
         this.log('Error: ' + error);
@@ -101,35 +114,44 @@ class Pondsensors implements AccessoryPlugin {
   handleCurrentAirTemperatureGet(callback) {
     this.log.info('called handleCurrentAirTemperatureGet');
     this.getData();
-    this.airtemperatureService.setCharacteristic(
-      hap.Characteristic.CurrentTemperature,
-      this.airtemperature,
-    );
     callback(null, this.airtemperature);
   }
 
   handleCurrentAirHumidityGet(callback) {
     this.log.info('called handleCurrentAirHumidityGet');
-    const value = 2;
-    callback(null, value);
-  }
-
-  handleCurrentSoilHumidityGet(callback) {
-    this.log.info('called handleCurrentSoilHumidityGet');
-    const value = 3;
-    callback(null, value);
+    callback(null, this.airhumidity);
   }
 
   handleCurrentWaterLevelGet(callback) {
     this.log.info('called handleCurrentWaterLevelGet');
-    const value = 4;
-    callback(null, value);
+    callback(null, this.waterlevel);
   }
+  
+  /*
+  handleCurrentActiveGet(callback) {
+    this.log.info('called handleCurrentActiveGet');
+    callback(null, 0);
+  }
+
+  handleCurrentHumidifierDehumidifierStateGet(callback) {
+    this.log.info('called handleCurrentHumidifierDehumidifierStateGet');
+    callback(null, 0);
+  }
+
+  handleCurrentTargetHumidifierDehumidifierStateGet(callback) {
+    this.log.info('called handleCurrentTargetHumidifierDehumidifierStateGet');
+    callback(null, 0);
+  }
+
+  handleCurrentRelativeHumidityGet(callback) {
+    this.log.info('called handleCurrentRelativeHumidityGet');
+    callback(null, 0);
+  }
+*/
 
   handleCurrentWaterTemperatureGet(callback) {
     this.log.info('called handleCurrentWaterTemperatureGet');
-    const value = 5;
-    callback(null, value);
+    callback(null, this.watertemperature);
   }
 
   getServices(): Service[] {
@@ -137,7 +159,6 @@ class Pondsensors implements AccessoryPlugin {
       this.informationService,
       this.airtemperatureService,
       this.airhumidityService,
-      this.soilhumidityService,
       this.waterlevelService,
       this.watertemperatureService,
     ];

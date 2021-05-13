@@ -1,8 +1,7 @@
 {
-  "private": true,
   "displayName": "Goldfish pond sensors",
   "name": "@daniblank/homebridge-http-pondsensors",
-  "version": "1.0.0",
+  "version": "0.1.1",
   "description": "Sensors for monitoring a goldfish pond",
   "license": "Apache-2.0",
   "repository": {
@@ -26,9 +25,12 @@
   "keywords": [
     "homebridge-plugin"
   ],
-  "dependencies": {},
+  "dependencies": {
+    "node-fetch": "^2.6.1"
+  },
   "devDependencies": {
     "@types/node": "^14.14.6",
+    "@types/node-fetch": "^2.5.7",
     "@typescript-eslint/eslint-plugin": "^4.6.1",
     "@typescript-eslint/parser": "^4.6.1",
     "eslint": "^7.13.0",
@@ -36,7 +38,6 @@
     "nodemon": "^2.0.6",
     "rimraf": "^3.0.2",
     "ts-node": "^9.0.0",
-    "typescript": "^4.0.5",
-    "@types/node-fetch": "^2.5.7"
+    "typescript": "^4.0.5"
   }
 }

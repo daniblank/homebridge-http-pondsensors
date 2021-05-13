@@ -9,8 +9,51 @@
         "title": "Name",
         "type": "string",
         "required": true,
-        "default": "Example Dynamic Platform"
+        "default": "My fish pond"
+      },
+      "airtempname": {
+        "title": "Air Temperature Sensor Name",
+        "type": "string",
+        "required": false,
+        "default": "Air Temperature"
+      },
+      "airhumname": {
+        "title": "Air Humidity Sensor Name",
+        "type": "string",
+        "required": true,
+        "default": "Air Humidity"
+      },
+      "waterlevelname": {
+        "title": "Water Level Sensor Name",
+        "type": "string",
+        "required": true,
+        "default": "Water Level"
+      },
+      "watertemperaturename": {
+        "title": "Water Temperature Sensor Name",
+        "type": "string",
+        "required": true,
+        "default": "Water Temperature"
+      },
+      "url": {
+        "title": "URL",
+        "type": "string",
+        "required": true,
+        "default": "http://192.168.1.7/"
+      },
+      "ultrasound_distance": {
+        "title": "Sensor to ground distance",
+        "type": "number",
+        "required": true,
+        "default": "50"
+      },
+      "airtemp_corr": {
+        "title": "Correction air temperature",
+        "type": "number",
+        "required": true,
+        "default": "0"
       }
+
     }
   }
 }
